@@ -2,40 +2,42 @@ import * as React from 'react';
 import MagnifyingGlassIcon from '@heroicons/react/24/solid/MagnifyingGlassIcon';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import { Button, InputAdornment, OutlinedInput, Typography, Stack, SvgIcon } from '@mui/material';
+import { v4 as uuidv4 } from 'uuid';
 
 const NodePackageQuery = "https://api.npms.io/v2/search?q=";
 const SemantricsAPI = "https://rcn3mxcjwd.execute-api.us-east-1.amazonaws.com/dev/";
 const SemantricsAPIKey = "cd332ee0-3f81-418d-aba2-aa0a99ff5ba7";
-const UserId = "ab498ded-1dd2-4a60-82ef-4f54cd24ac31";
 
 export default function MyApp() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [resultList, setResultList] = React.useState([]); 
   const [loadingStatus, setLoadingStatus] = React.useState(false);
+  const [userId, setUserId] = React.useState(uuidv4());
 
   // Track state of search query
   const handleTextInputChange = event => {
-    console.log("query change: ", event.target.value);
     setSearchQuery(event.target.value);
+    if (resultList.length > 0) {
+      setResultList([]);
+    }
   };
 
   // Load the results from the NPM API
   const handleSearchButtonClick = async event => {
     setLoadingStatus(true);
-    console.log("click search and query: ", searchQuery);
-
     // Register query with Semantrics. Fire and forget
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         "interfaceKey": SemantricsAPIKey,
-        "userId": UserId,
+        "userId": userId,
         "query": searchQuery,
         "metadata": ["experimentA", "variantC"],
         "queryTime": new Date().getTime()
       })
     };
+    console.log("posting search to Semantrics: " + JSON.stringify(requestOptions.body));
     fetch(SemantricsAPI + 'query', requestOptions);
 
     let headers = new Headers({
@@ -54,9 +56,9 @@ export default function MyApp() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         "interfaceKey": SemantricsAPIKey,
-        "userId": UserId,
+        "userId": userId,
         "query": searchQuery,
-        "results": data["results"].map((item, index) => {
+        "results": data["results"].filter(function (item, index) { return index < 10 }).map((item, index) => {
           return {
             name: item.package.name,
             url: item.package.links.npm,
@@ -66,6 +68,7 @@ export default function MyApp() {
         "resultReturnTime": new Date().getTime()
       })
     };
+    console.log("posting result list to Semantrics: " + JSON.stringify(requestOptions.body));
     fetch(SemantricsAPI + 'results', requestROptions);
 
     const tempResultList = data["results"].map((item, index) => {
@@ -83,7 +86,6 @@ export default function MyApp() {
 
   // Handle clicking on a result
   const handleResultItemClick = async (result) => {
-    console.log("click result: ", result);
     window.open(result.url, "_blank");
     
     // Register interaction with Semantrics
@@ -92,13 +94,14 @@ export default function MyApp() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         "interfaceKey": SemantricsAPIKey,
-        "userId": UserId,
+        "userId": userId,
         "query": searchQuery,
         "resultName": result.title,
         "resultRow": result.index,
         "interactionTime": new Date().getTime()
       })
     };
+    console.log("posting click to Semantrics: " + JSON.stringify(requestOptions.body));
     fetch(SemantricsAPI + 'interaction', requestOptions);
   };
 
@@ -123,13 +126,36 @@ export default function MyApp() {
       <Stack
         alignItems="center"
         direction="row"
-        spacing={1}
+        spacing={2}
+      >
+        <Typography 
+          color="primary"
+          variant="body">
+          <b>User ID:</b> {userId}
+        </Typography>
+        <Button
+          color="primary"
+          fontSize="large"
+          onClick={() => { setUserId(uuidv4()); }}
+          variant="contained"
+        >
+          New User
+        </Button>
+      </Stack>
+      <Stack
+        alignItems="center"
+        direction="row"
+        spacing={2}
       >
         <OutlinedInput
           defaultValue=""
-          fullWidth
           placeholder="Search NPM Packages"
           onChange={handleTextInputChange}
+          onKeyPress={event => {
+            if (event.key === 'Enter') {
+              handleSearchButtonClick();
+            }
+          }}
           startAdornment={(
             <InputAdornment
               position="start">
@@ -141,12 +167,11 @@ export default function MyApp() {
               </SvgIcon>
             </InputAdornment>
           )}
-          sx={{ maxWidth: "20%" }}
+          sx={{ width: "25%" }}
         />
         <Button
           color="primary"
           fontSize="large"
-          sx={{ ml: 2 }}
           onClick={handleSearchButtonClick}
           variant="contained"
         >
