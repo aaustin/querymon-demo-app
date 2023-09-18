@@ -5,8 +5,8 @@ import { Button, InputAdornment, OutlinedInput, Typography, Stack, SvgIcon } fro
 import { v4 as uuidv4 } from 'uuid';
 
 const NodePackageQuery = "https://api.npms.io/v2/search?q=";
-const SemantricsAPI = "https://rcn3mxcjwd.execute-api.us-east-1.amazonaws.com/dev/";
-const SemantricsAPIKey = "cd332ee0-3f81-418d-aba2-aa0a99ff5ba7";
+const QuerymonAPI = "https://rcn3mxcjwd.execute-api.us-east-1.amazonaws.com/dev/";
+const QuerymonAPIKey = "cd332ee0-3f81-418d-aba2-aa0a99ff5ba7";
 
 export default function MyApp() {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -25,20 +25,20 @@ export default function MyApp() {
   // Load the results from the NPM API
   const handleSearchButtonClick = async event => {
     setLoadingStatus(true);
-    // Register query with Semantrics. Fire and forget
+    // Register query with Querymon. Fire and forget
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        "interfaceKey": SemantricsAPIKey,
+        "interfaceKey": QuerymonAPIKey,
         "userId": userId,
         "query": searchQuery,
         "metadata": ["experimentA", "variantC"],
         "queryTime": new Date().getTime()
       })
     };
-    console.log("posting search to Semantrics: " + JSON.stringify(requestOptions.body));
-    fetch(SemantricsAPI + 'query', requestOptions);
+    console.log("posting search to Querymon: " + JSON.stringify(requestOptions.body));
+    fetch(QuerymonAPI + 'query', requestOptions);
 
     let headers = new Headers({
         "Accept"       : "application/json",
@@ -50,12 +50,12 @@ export default function MyApp() {
       headers : headers });
     const data = await response.json();
 
-    // Register results with Semantrics. Fire and forget.
+    // Register results with Querymon. Fire and forget.
     const requestROptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        "interfaceKey": SemantricsAPIKey,
+        "interfaceKey": QuerymonAPIKey,
         "userId": userId,
         "query": searchQuery,
         "results": data["results"].filter(function (item, index) { return index < 10 }).map((item, index) => {
@@ -68,8 +68,8 @@ export default function MyApp() {
         "resultReturnTime": new Date().getTime()
       })
     };
-    console.log("posting result list to Semantrics: " + JSON.stringify(requestOptions.body));
-    fetch(SemantricsAPI + 'results', requestROptions);
+    console.log("posting result list to Querymon: " + JSON.stringify(requestOptions.body));
+    fetch(QuerymonAPI + 'results', requestROptions);
 
     const tempResultList = data["results"].map((item, index) => {
       return {
@@ -88,12 +88,12 @@ export default function MyApp() {
   const handleResultItemClick = async (result) => {
     window.open(result.url, "_blank");
     
-    // Register interaction with Semantrics
+    // Register interaction with Querymon
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        "interfaceKey": SemantricsAPIKey,
+        "interfaceKey": QuerymonAPIKey,
         "userId": userId,
         "query": searchQuery,
         "resultName": result.title,
@@ -101,8 +101,25 @@ export default function MyApp() {
         "interactionTime": new Date().getTime()
       })
     };
-    console.log("posting click to Semantrics: " + JSON.stringify(requestOptions.body));
-    fetch(SemantricsAPI + 'interaction', requestOptions);
+    console.log("posting click to Querymon: " + JSON.stringify(requestOptions.body));
+    fetch(QuerymonAPI + 'interaction', requestOptions);
+  };
+
+  const handleConversionEventClick = async () => {
+    // Register interaction with Querymon
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        "interfaceKey": QuerymonAPIKey,
+        "userId": userId,
+        "eventTime": new Date().getTime(),
+        "eventName": "purchase",
+        "eventValue": Math.floor(Math.random() * 10000)
+      })
+    };
+    console.log("posting click to Querymon: " + JSON.stringify(requestOptions.body));
+    fetch(QuerymonAPI + 'conversion', requestOptions);
   };
 
   return (
@@ -120,7 +137,7 @@ export default function MyApp() {
         <Typography 
           color="primary"
           variant="h6">
-          Semantrics Demo App
+          Querymon Demo App
         </Typography>
       </Stack>
       <Stack
@@ -176,6 +193,14 @@ export default function MyApp() {
           variant="contained"
         >
           Search
+        </Button>
+        <Button
+          color="primary"
+          fontSize="large"
+          onClick={handleConversionEventClick}
+          variant="contained"
+        >
+          Conversion Event
         </Button>
       </Stack>
       {loadingStatus ?
