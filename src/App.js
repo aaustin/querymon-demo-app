@@ -4,8 +4,8 @@ import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import { Button, InputAdornment, OutlinedInput, Typography, Stack, SvgIcon } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 
-const NodePackageQuery = "https://api.npms.io/v2/search?q=";
-const QuerymonAPI = "https://rb5chfcso9.execute-api.us-east-1.amazonaws.com/dev";
+const NodePackageQuery = "https://registry.npmjs.org/-/v1/search?text=";
+const QuerymonAPI = "https://rb5chfcso9.execute-api.us-east-1.amazonaws.com/dev/";
 const QuerymonAPIKey = "76839480-01d3-4a13-be96-528ef7a64944";
 
 export default function MyApp() {
@@ -41,8 +41,6 @@ export default function MyApp() {
     fetch(QuerymonAPI + 'query', requestOptions);
 
     let headers = new Headers({
-        "Accept"       : "application/json",
-        "Content-Type" : "application/json",
         "User-Agent"   : navigator.userAgent
     });
     const response = await fetch(NodePackageQuery + encodeURIComponent(searchQuery), { 
@@ -58,7 +56,7 @@ export default function MyApp() {
         "interfaceKey": QuerymonAPIKey,
         "userId": userId,
         "query": searchQuery,
-        "results": data["results"].filter(function (item, index) { return index < 10 }).map((item, index) => {
+        "results": data["objects"].filter(function (item, index) { return index < 10 }).map((item, index) => {
           return {
             name: item.package.name,
             url: item.package.links.npm,
@@ -71,7 +69,7 @@ export default function MyApp() {
     console.log("posting result list to Querymon: " + JSON.stringify(requestOptions.body));
     fetch(QuerymonAPI + 'results', requestROptions);
 
-    const tempResultList = data["results"].map((item, index) => {
+    const tempResultList = data["objects"].map((item, index) => {
       return {
         title: item.package.name,
         version: item.package.version,
