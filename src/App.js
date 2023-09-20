@@ -5,8 +5,8 @@ import { Button, InputAdornment, OutlinedInput, Typography, Stack, SvgIcon } fro
 import { v4 as uuidv4 } from 'uuid';
 
 const NodePackageQuery = "https://api.npms.io/v2/search?q=";
-const QuerymonAPI = "https://rcn3mxcjwd.execute-api.us-east-1.amazonaws.com/dev/";
-const QuerymonAPIKey = "cd332ee0-3f81-418d-aba2-aa0a99ff5ba7";
+const QuerymonAPI = "https://rb5chfcso9.execute-api.us-east-1.amazonaws.com/dev";
+const QuerymonAPIKey = "76839480-01d3-4a13-be96-528ef7a64944";
 
 export default function MyApp() {
   const [searchQuery, setSearchQuery] = React.useState("");
