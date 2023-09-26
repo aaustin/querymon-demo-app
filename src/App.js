@@ -59,6 +59,7 @@ export default function MyApp() {
       return {
         entityId: item.package.name + "-" + item.package.version,
         name: item.package.name,
+        description: item.package.description,
         url: item.package.links.npm,
         index: index
       };
