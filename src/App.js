@@ -86,7 +86,7 @@ export default function MyApp() {
   };
 
   const handleConversionEventClick = async () => {
-    // Register interaction with Querymon
+    // Register conversion event with Querymon
     querymon.logConversion("purchase", { "eventValue": Math.floor(Math.random() * 10000) });
   };
 
